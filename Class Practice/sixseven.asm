@@ -1,0 +1,31 @@
+org 100h
+
+MOV AX, 0B800H
+MOV ES, AX
+MOV DI, 0000H
+
+MOV SI, OFFSET MSG1
+
+MOV CX, 18
+PRINTA:
+    CLD
+    LODSB
+    STOSB
+    
+    INC DI
+    CALL DELAY
+    LOOP PRINTA
+
+ret
+
+MSG1 DB 'OWAAAA SIX SEVENNN'
+
+DELAY:
+    PUSH CX
+    MOV CX, 0FFH
+    DELAY_IT:
+        LOOP DELAY_IT
+        
+    POP CX  
+    
+RET
