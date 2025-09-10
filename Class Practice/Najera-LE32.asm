@@ -1,0 +1,26 @@
+;LE32.ASM   NAJERAaj    Date: 2025.09.10
+
+org 100h
+
+XOR AX,AX
+MOV CL, 05H
+MOV SI, 00H
+
+BACK:
+    ADD AL, ARR[SI+0]
+    INC SI
+    DEC CL
+    JNZ BACK
+    
+MOV BL, 08H
+NOT BL
+NEG BL
+SHL BL, 1
+RCR BL, 2
+DIV BL
+
+ret
+
+
+
+
