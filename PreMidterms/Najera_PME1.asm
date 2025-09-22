@@ -33,7 +33,7 @@ start:
     mov ah, 13h
     int 10h
 
-    cmp dh, 0
+    cmp dh, 11
     je atTop
 
     lea bp, blank

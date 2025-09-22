@@ -1,0 +1,64 @@
+Question 1100 pts
+BUTTERFLY [100 points]. Allow the user to input a three-letter string. The program shall do the ff. in sequence:
+
+1. clears the entire screen.
+
+2. displays all letters centered in the bottom row of the screen.
+
+3. scrolls up all letters to the middle row of the screen, no traces.
+
+4. freezes the mid letter in position while the remaining letters diagonally move upward and downward simultaneously to the top left and bottom right edges of the screen.
+
+5. Once the edges are reached, the letters fall and rise to the opposite ends of the screen.
+
+6. Then diagonally returns to the mid letter forming the original string.
+
+Upload 
+ 
+Flag question: Question 2
+Question 2100 pts
+EQUATION [100 points]. Allow the user to input the 2-digit values of the variables for the given equation below.
+
+         X = A - B x C / D
+
+Your program should be able to:
+
+1. display the inputted values.
+
+2. show the equation with the inputted values.
+
+3. evaluate the equation.
+
+4. show the results in base 10 and 5.
+
+ 
+
+EXAMPLE:
+
+Input A: 80
+
+Input B: 10
+
+Input C: 02
+
+Input D: 05
+
+==========
+
+A = 80
+
+B = 10
+
+C = 02
+
+D = 05
+
+===========
+
+X = 80 - 10 x 02 / 05
+
+===========
+
+X = ????10
+
+X = ????5
