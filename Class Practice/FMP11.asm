@@ -1,0 +1,1 @@
+I/O port addresses are often even because many early computer components were designed to send and receive data 16 bits (or one "word") at a time. Using even addresses makes the hardware design simpler and faster, as it ensures this chunk of data is properly aligned and can be handled in a single, efficient operation.
