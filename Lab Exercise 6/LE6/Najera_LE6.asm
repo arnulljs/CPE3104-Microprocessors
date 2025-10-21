@@ -1,0 +1,585 @@
+;ARNOLD JOSEPH C. NAJERA JR.
+;BS CPE 3
+;LE6
+
+DATA SEGMENT
+   PORTA EQU 0F0H
+   PORTB EQU 0F2H
+   PORTC EQU 0F4H
+   COM_REG EQU 0F6H
+   
+   LCD_ON DB 0
+   SYSTEM_ARMED DB 0
+   CODE_SET DB 0
+   ACCESS_CODE DB 8 DUP(0)
+   CODE_LENGTH DB 0
+   CURRENT_CHOICE DB 0
+   INPUT_BUFFER DB 8 DUP(0)
+   INPUT_COUNT DB 0
+   
+   MAIN_MENU_LINE1 DB "   MAIN MENU    ", 0
+   MAIN_MENU_LINE2 DB "                ", 0
+   MAIN_MENU_LINE3 DB "   [1] Set code ", 0
+   MAIN_MENU_LINE4 DB "   [2] Arm system", 0
+   CODE_INPUT_LINE1 DB "Input Access Code", 0
+   CODE_INPUT_LINE2 DB "[]              ", 0
+   ERROR_LINE1 DB "ERROR: System can", 0
+   ERROR_LINE2 DB "not be armed, no ", 0
+   ERROR_LINE3 DB "code set!        ", 0
+   ARMED_LINE1 DB "WARNING: System is", 0
+   ARMED_LINE2 DB "armed! Press 0 to ", 0
+   ARMED_LINE3 DB "disarm.          ", 0
+   SUCCESS_LINE1 DB "SUCCESS: System is", 0
+   SUCCESS_LINE2 DB "disarmed! Press # ", 0
+   SUCCESS_LINE3 DB "to return to menu.", 0
+   FAIL_LINE1 DB "FAILED: Wrong code!", 0
+DATA ENDS
+
+CODE SEGMENT PUBLIC 'CODE'
+        ASSUME CS:CODE, DS:DATA
+
+START:
+        MOV AX, DATA
+        MOV DS, AX
+        
+        MOV DX, COM_REG
+        MOV AL, 89H
+        OUT DX, AL
+        
+        CALL INIT_LCD
+        
+        MOV LCD_ON, 0
+        MOV SYSTEM_ARMED, 0
+        MOV CODE_SET, 0
+        MOV CODE_LENGTH, 0
+        MOV CURRENT_CHOICE, 0
+        MOV INPUT_COUNT, 0
+
+MAIN_LOOP:
+        MOV DX, PORTC
+        IN AL, DX
+        TEST AL, 10H
+        JZ MAIN_LOOP
+        
+        IN AL, DX
+        AND AL, 0FH
+        
+        CMP AL, 0CH
+        JE KEY_STAR_POWER
+        CMP AL, 0EH
+        JE KEY_HASH
+        
+        CMP LCD_ON, 0
+        JE MAIN_LOOP
+        
+        CMP AL, 00H
+        JE KEY_1
+        CMP AL, 01H
+        JE KEY_2
+        CMP AL, 02H
+        JE KEY_3
+        CMP AL, 04H
+        JE KEY_4
+        CMP AL, 05H
+        JE KEY_5
+        CMP AL, 06H
+        JE KEY_6
+        CMP AL, 08H
+        JE KEY_7
+        CMP AL, 09H
+        JE KEY_8
+        CMP AL, 0AH
+        JE KEY_9
+        CMP AL, 0DH
+        JE KEY_0
+        
+        CALL DELAY_1MS
+        CALL DELAY_1MS
+        CALL DELAY_1MS
+        
+        JMP MAIN_LOOP
+
+KEY_STAR_POWER:
+        MOV LCD_ON, 1
+        CALL CLEAR_LCD
+        CALL SHOW_MAIN_MENU
+        JMP MAIN_LOOP
+
+KEY_HASH:
+        CMP SYSTEM_ARMED, 1
+        JE MAIN_LOOP
+        
+        CMP LCD_ON, 0
+        JE MAIN_LOOP
+        
+        CMP CURRENT_CHOICE, 0
+        JE TURN_OFF_LCD
+        
+        CMP CURRENT_CHOICE, 1
+        JE VALIDATE_AND_SET_CODE
+        
+        JMP SIMULATE_STAR_PRESS
+
+TURN_OFF_LCD:
+        MOV LCD_ON, 0
+        CALL CLEAR_LCD
+        JMP MAIN_LOOP
+
+VALIDATE_AND_SET_CODE:
+        CMP INPUT_COUNT, 4
+        JB CODE_TOO_SHORT
+        
+        MOV CL, INPUT_COUNT
+        MOV CODE_LENGTH, CL
+        LEA SI, INPUT_BUFFER
+        LEA DI, ACCESS_CODE
+        MOV CH, 0
+        REP MOVSB
+        MOV CODE_SET, 1
+        JMP RETURN_TO_MAIN_MENU
+
+CODE_TOO_SHORT:
+        JMP MAIN_LOOP
+
+SIMULATE_STAR_PRESS:
+        MOV LCD_ON, 0
+        CALL CLEAR_LCD
+        CALL LONG_DELAY
+        CALL LONG_DELAY
+        MOV LCD_ON, 1
+        CALL CLEAR_LCD
+        CALL SHOW_MAIN_MENU
+        JMP MAIN_LOOP
+
+RETURN_TO_MAIN_MENU:
+        MOV CURRENT_CHOICE, 0
+        MOV INPUT_COUNT, 0
+        CALL CLEAR_LCD
+        CALL SHOW_MAIN_MENU
+        JMP MAIN_LOOP
+
+KEY_0:  
+        CMP SYSTEM_ARMED, 1
+        JE DISARM_ATTEMPT
+        MOV AL, '0'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_1:  MOV AL, '1'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_2:  MOV AL, '2'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_3:  MOV AL, '3'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_4:  MOV AL, '4'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_5:  MOV AL, '5'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_6:  MOV AL, '6'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_7:  MOV AL, '7'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_8:  MOV AL, '8'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+KEY_9:  MOV AL, '9'
+        CALL PROCESS_INPUT
+        JMP MAIN_LOOP
+
+PROCESS_INPUT PROC
+        CMP SYSTEM_ARMED, 1
+        JE PROCESS_ARMED_INPUT
+        
+        CMP CURRENT_CHOICE, 0
+        JE PROCESS_MENU_CHOICE
+        
+        CMP CURRENT_CHOICE, 1
+        JE PROCESS_CODE_INPUT
+        
+        RET
+
+PROCESS_MENU_CHOICE:
+        CMP AL, '1'
+        JE SET_CODE_CHOICE
+        CMP AL, '2'
+        JE ARM_SYSTEM_CHOICE
+        RET
+
+SET_CODE_CHOICE:
+        MOV CURRENT_CHOICE, 1
+        MOV INPUT_COUNT, 0
+        CALL CLEAR_LCD
+        CALL SHOW_CODE_INPUT
+        CALL WAIT_FOR_KEY_RELEASE
+        RET
+
+ARM_SYSTEM_CHOICE:
+        CMP CODE_SET, 0
+        JE SHOW_NO_CODE_ERROR
+        MOV SYSTEM_ARMED, 1
+        MOV INPUT_COUNT, 0
+        CALL CLEAR_LCD
+        CALL SHOW_ARMED_MESSAGE
+        CALL WAIT_FOR_KEY_RELEASE
+        RET
+
+SHOW_NO_CODE_ERROR:
+        CALL CLEAR_LCD
+        CALL SHOW_ERROR_MESSAGE
+        CALL WAIT_FOR_HASH_RESTART
+        RET
+
+PROCESS_CODE_INPUT:
+        CMP INPUT_COUNT, 8
+        JAE CODE_INPUT_FULL
+        
+        LEA SI, INPUT_BUFFER
+        MOV BL, INPUT_COUNT
+        MOV BH, 0
+        ADD SI, BX
+        MOV [SI], AL
+        INC INPUT_COUNT
+        CALL UPDATE_CODE_DISPLAY
+        CALL WAIT_FOR_KEY_RELEASE
+        RET
+
+CODE_INPUT_FULL:
+        RET
+
+PROCESS_ARMED_INPUT:
+        CMP INPUT_COUNT, 8
+        JAE ARMED_INPUT_FULL
+        
+        LEA SI, INPUT_BUFFER
+        MOV BL, INPUT_COUNT
+        MOV BH, 0
+        ADD SI, BX
+        MOV [SI], AL
+        INC INPUT_COUNT
+        CALL UPDATE_ARMED_DISPLAY
+        CALL WAIT_FOR_KEY_RELEASE
+        RET
+
+ARMED_INPUT_FULL:
+        RET
+PROCESS_INPUT ENDP
+
+WAIT_FOR_KEY_RELEASE PROC
+        CALL DELAY_1MS
+        CALL DELAY_1MS
+WAIT_RELEASE_LOOP:
+        MOV DX, PORTC
+        IN AL, DX
+        TEST AL, 10H
+        JNZ WAIT_RELEASE_LOOP
+        RET
+WAIT_FOR_KEY_RELEASE ENDP
+
+UPDATE_CODE_DISPLAY PROC
+        MOV AL, 0C0H
+        CALL INST_CTRL
+        MOV AL, '['
+        CALL DATA_CTRL
+        MOV CL, INPUT_COUNT
+        MOV CH, 0
+        CMP CL, 0
+        JE NO_ASTERISKS
+DISPLAY_ASTERISKS:
+        MOV AL, '*'
+        CALL DATA_CTRL
+        LOOP DISPLAY_ASTERISKS
+        
+NO_ASTERISKS:
+        MOV CL, 8
+        SUB CL, INPUT_COUNT
+        MOV CH, 0
+        CMP CL, 0
+        JE CLOSE_BRACKET
+DISPLAY_SPACES:
+        MOV AL, ' '
+        CALL DATA_CTRL
+        LOOP DISPLAY_SPACES
+        
+CLOSE_BRACKET:
+        MOV AL, ']'
+        CALL DATA_CTRL
+        MOV CX, 4
+FILL_REST:
+        MOV AL, ' '
+        CALL DATA_CTRL
+        LOOP FILL_REST
+        RET
+UPDATE_CODE_DISPLAY ENDP
+
+UPDATE_ARMED_DISPLAY PROC
+        MOV AL, 0D4H
+        CALL INST_CTRL
+        MOV AL, '['
+        CALL DATA_CTRL
+        MOV CL, INPUT_COUNT
+        MOV CH, 0
+        CMP CL, 0
+        JE ARMED_NO_ASTERISKS
+ARMED_DISPLAY_ASTERISKS:
+        MOV AL, '*'
+        CALL DATA_CTRL
+        LOOP ARMED_DISPLAY_ASTERISKS
+        
+ARMED_NO_ASTERISKS:
+        MOV CL, 8
+        SUB CL, INPUT_COUNT
+        MOV CH, 0
+        CMP CL, 0
+        JE ARMED_CLOSE_BRACKET
+ARMED_DISPLAY_SPACES:
+        MOV AL, ' '
+        CALL DATA_CTRL
+        LOOP ARMED_DISPLAY_SPACES
+        
+ARMED_CLOSE_BRACKET:
+        MOV AL, ']'
+        CALL DATA_CTRL
+        RET
+UPDATE_ARMED_DISPLAY ENDP
+
+DISARM_ATTEMPT:
+        MOV CL, CODE_LENGTH
+        MOV CH, 0
+        CMP INPUT_COUNT, CL
+        JNE DISARM_FAIL
+        
+        LEA SI, ACCESS_CODE
+        LEA DI, INPUT_BUFFER
+        REPE CMPSB
+        JNE DISARM_FAIL
+        
+        MOV SYSTEM_ARMED, 0
+        MOV INPUT_COUNT, 0
+        CALL CLEAR_LCD
+        CALL SHOW_DISARM_SUCCESS
+        CALL WAIT_FOR_HASH_RESTART
+        JMP MAIN_LOOP
+
+DISARM_FAIL:
+        MOV INPUT_COUNT, 0
+        CALL CLEAR_LCD
+        CALL SHOW_DISARM_FAIL
+        CALL LONG_DELAY
+        CALL SHOW_ARMED_MESSAGE
+        JMP MAIN_LOOP
+
+WAIT_FOR_HASH_RESTART PROC
+WAIT_HASH_LOOP:
+        MOV DX, PORTC
+        IN AL, DX
+        TEST AL, 10H
+        JZ WAIT_HASH_LOOP
+        
+        IN AL, DX
+        AND AL, 0FH
+        CMP AL, 0EH
+        JNE WAIT_HASH_LOOP
+        
+        MOV CURRENT_CHOICE, 0
+        MOV INPUT_COUNT, 0
+        MOV SYSTEM_ARMED, 0
+        MOV LCD_ON, 0
+        CALL CLEAR_LCD
+        CALL LONG_DELAY
+        CALL LONG_DELAY
+        MOV LCD_ON, 1
+        CALL CLEAR_LCD
+        CALL SHOW_MAIN_MENU
+        RET
+WAIT_FOR_HASH_RESTART ENDP
+
+SHOW_MAIN_MENU PROC
+        MOV AL, 80H
+        CALL INST_CTRL
+        LEA SI, MAIN_MENU_LINE1
+        CALL PRINT_STRING
+        MOV AL, 0C0H
+        CALL INST_CTRL
+        LEA SI, MAIN_MENU_LINE2
+        CALL PRINT_STRING
+        MOV AL, 94H
+        CALL INST_CTRL
+        LEA SI, MAIN_MENU_LINE3
+        CALL PRINT_STRING
+        MOV AL, 0D4H
+        CALL INST_CTRL
+        LEA SI, MAIN_MENU_LINE4
+        CALL PRINT_STRING
+        RET
+SHOW_MAIN_MENU ENDP
+
+SHOW_CODE_INPUT PROC
+        MOV AL, 80H
+        CALL INST_CTRL
+        LEA SI, CODE_INPUT_LINE1
+        CALL PRINT_STRING
+        CALL UPDATE_CODE_DISPLAY
+        RET
+SHOW_CODE_INPUT ENDP
+
+SHOW_ERROR_MESSAGE PROC
+        MOV AL, 80H
+        CALL INST_CTRL
+        LEA SI, ERROR_LINE1
+        CALL PRINT_STRING
+        MOV AL, 0C0H
+        CALL INST_CTRL
+        LEA SI, ERROR_LINE2
+        CALL PRINT_STRING
+        MOV AL, 94H
+        CALL INST_CTRL
+        LEA SI, ERROR_LINE3
+        CALL PRINT_STRING
+        RET
+SHOW_ERROR_MESSAGE ENDP
+
+SHOW_ARMED_MESSAGE PROC
+        MOV AL, 80H
+        CALL INST_CTRL
+        LEA SI, ARMED_LINE1
+        CALL PRINT_STRING
+        MOV AL, 0C0H
+        CALL INST_CTRL
+        LEA SI, ARMED_LINE2
+        CALL PRINT_STRING
+        MOV AL, 94H
+        CALL INST_CTRL
+        LEA SI, ARMED_LINE3
+        CALL PRINT_STRING
+        MOV AL, 0D4H
+        CALL INST_CTRL
+        MOV AL, '['
+        CALL DATA_CTRL
+        MOV CX, 8
+ARMED_DISPLAY_SPACES:
+        MOV AL, ' '
+        CALL DATA_CTRL
+        LOOP ARMED_DISPLAY_SPACES
+        MOV AL, ']'
+        CALL DATA_CTRL
+        RET
+SHOW_ARMED_MESSAGE ENDP
+
+SHOW_DISARM_SUCCESS PROC
+        MOV AL, 80H
+        CALL INST_CTRL
+        LEA SI, SUCCESS_LINE1
+        CALL PRINT_STRING
+        MOV AL, 0C0H
+        CALL INST_CTRL
+        LEA SI, SUCCESS_LINE2
+        CALL PRINT_STRING
+        MOV AL, 94H
+        CALL INST_CTRL
+        LEA SI, SUCCESS_LINE3
+        CALL PRINT_STRING
+        RET
+SHOW_DISARM_SUCCESS ENDP
+
+SHOW_DISARM_FAIL PROC
+        MOV AL, 80H
+        CALL INST_CTRL
+        LEA SI, FAIL_LINE1
+        CALL PRINT_STRING
+        RET
+SHOW_DISARM_FAIL ENDP
+
+INST_CTRL:
+        PUSH AX
+        MOV DX, PORTA
+        OUT DX, AL
+        MOV DX, PORTB
+        MOV AL, 02H
+        OUT DX, AL
+        CALL DELAY_1MS
+        MOV DX, PORTB
+        MOV AL, 00H
+        OUT DX, AL
+        POP AX
+        RET
+
+DATA_CTRL:
+        PUSH AX
+        MOV DX, PORTA
+        OUT DX, AL
+        MOV DX, PORTB
+        MOV AL, 03H
+        OUT DX, AL
+        CALL DELAY_1MS
+        MOV DX, PORTB
+        MOV AL, 01H
+        OUT DX, AL
+        POP AX
+        RET
+
+PRINT_STRING PROC
+        PUSH AX
+        PUSH SI
+NEXT_CHAR:
+        MOV AL, [SI]
+        CMP AL, 0
+        JE PRINT_DONE
+        CALL DATA_CTRL
+        INC SI
+        JMP NEXT_CHAR
+PRINT_DONE:
+        POP SI
+        POP AX
+        RET
+PRINT_STRING ENDP
+
+CLEAR_LCD:
+        MOV AL, 01H
+        CALL INST_CTRL
+        CALL DELAY_1MS
+        RET
+
+INIT_LCD:
+        MOV AL, 38H
+        CALL INST_CTRL
+        MOV AL, 08H
+        CALL INST_CTRL
+        MOV AL, 01H
+        CALL INST_CTRL
+        MOV AL, 06H
+        CALL INST_CTRL
+        MOV AL, 0CH
+        CALL INST_CTRL
+        RET
+
+DELAY_1MS:
+        MOV BX, 02CAH
+L1:     DEC BX
+        NOP
+        JNZ L1
+        RET
+
+LONG_DELAY:
+        MOV CX, 10
+LONG_DELAY_LOOP:
+        CALL DELAY_1MS
+        LOOP LONG_DELAY_LOOP
+        RET
+
+CODE ENDS
+END START

@@ -43,3 +43,41 @@ ret
 ; so if cmp with (000)0, it will return true on ZF always
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a
