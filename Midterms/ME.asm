@@ -1,0 +1,188 @@
+; LEDPRACTICE
+;
+; Created:   Sun Oct 19 2025
+; Processor: 8086
+; Compiler:  MASM32
+;
+; Before starting simulation set Internal Memory Size 
+; in the 8086 model properties to 0x10000
+;====================================================================
+
+DATA 	SEGMENT
+
+   PORTA	EQU	0C8H
+   PORTB	EQU	0CAH
+   PORTC	EQU	0CCH
+   COMREG	EQU	0CEH
+   COMBYTE	EQU	10001001B
+
+DATA	ENDS
+
+
+CODE    SEGMENT PUBLIC 'CODE'
+        ASSUME CS:CODE
+
+START:
+        CALL INIT_8255
+
+	WAIT_INPUT:
+	   MOV DX, PORTC
+	   IN AL, DX
+	   
+	   CMP AL, 00000000B
+	   JE OFF
+	   
+	   CMP AL, 00000001B
+	   JE ON  
+	   
+	   JMP WAIT_INPUT
+	   
+	 ON:
+	 MOV DX, PORTC
+	 IN AL, DX
+	 
+	 CMP AL, 00000111B
+	 JE PATTERN_INPUT 
+	 
+	  CMP AL, 00000011B
+	  JE PATTERN_INPUT 
+	  
+	  JMP WAIT_INPUT
+	   
+	
+	PATTERN_INPUT:
+	MOV DX, PORTC
+	IN AL, DX
+	
+	CMP AL, 00010011B
+	JE CLOCK
+	
+	CMP AL, 00010111B
+	JE CLOCK
+	
+	
+	JMP WAIT_INPUT
+	
+	
+	OFF:
+	   MOV DX, PORTA
+	   MOV AL, 00000000B
+	   OUT DX, AL
+	   JMP WAIT_INPUT
+	   
+	   
+	CLOCK:
+	   MOV DX, PORTA
+	   MOV AL, 00000001B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	    MOV DX, PORTA
+	   MOV AL, 00000011B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	    MOV DX, PORTA
+	   MOV AL, 00000111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00001111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00011111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00111111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 01111111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 11111111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   OUT DX, AL
+	   CALL DELAY
+	   JMP WAIT_INPUT
+	
+	ALL_ON:
+	   MOV DX, PORTA
+	   MOV AL, 11111111B
+	   OUT DX, AL
+	   MOV DX, PORTB
+	   MOV AL, 11111111B
+	   OUT DX, AL
+	   JMP WAIT_INPUT
+	
+	CYCLONE:
+	   MOV DX, PORTA
+	   MOV AL, 10011001B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 01100110B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 01100000B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 10010000B
+	   OUT DX, AL
+	   JMP WAIT_INPUT
+	   
+	SNAKE:
+	   MOV DX, PORTA
+	   MOV AL, 00000001B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00000011B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00000110B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00001100B
+	   OUT DX, AL
+	   MOV AL, 10001000B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 11000000B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 01100000B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00110000B
+	   OUT DX, AL
+	   CALL DELAY
+	   MOV AL, 00010001B
+	   OUT DX, AL
+	   JMP WAIT_INPUT
+
+	DELAY:
+	 MOV CX, 10
+	DELAY_LOOP:
+	   NOP
+	   LOOP DELAY_LOOP
+	   RET
+	
+	INIT_8255:
+	   MOV DX, COMREG
+	   MOV AL, COMBYTE
+	   OUT DX, AL
+	   RET
+ENDLESS:
+        JMP ENDLESS
+CODE    ENDS
+        END START
