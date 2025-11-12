@@ -1,0 +1,309 @@
+PROCED1 SEGMENT
+ISR1 PROC FAR
+ASSUME CS:PROCED1, DS:DATA
+ORG 01000H 
+	PUSHF ; push 16-bit operands
+	PUSH AX ; save program context
+	PUSH DX
+	
+	MOV DX, PORTC
+        IN AL,DX
+	AND AL,0FH
+	CMP AL,00H
+	JE _ONE
+	CMP AL,01H
+	JE _TWO
+	CMP AL,02H
+	JE _THREE
+	CMP AL,04H
+	JE _FOUR
+	CMP AL,05H
+	JE _FIVE
+	CMP AL,06H
+	JE _SIX
+	CMP AL,08H
+	JE _SEVEN
+	CMP AL,09H
+	JE _EIGHT
+	CMP AL,0AH
+	JE _NINE
+	CMP AL,0CH
+	JE _DASH
+	CMP AL,0DH
+	JE _ZERO
+	CMP AL,0EH
+	JE _DASH
+
+	_ZERO:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB0
+		OUT DX, AL
+		JMP END_CHECK
+	_ONE:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB1
+		OUT DX, AL
+		JMP END_CHECK
+	_TWO:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB2
+		OUT DX, AL
+		JMP END_CHECK
+	_THREE:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB3
+		OUT DX, AL
+		JMP END_CHECK
+	_FOUR:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB4
+		OUT DX, AL
+		JMP END_CHECK
+	_FIVE:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB5
+		OUT DX, AL
+		JMP END_CHECK
+	_SIX:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB6
+		OUT DX, AL
+		JMP END_CHECK
+	_SEVEN:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB7
+		OUT DX, AL
+		JMP END_CHECK
+	_EIGHT:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB8
+		OUT DX, AL
+		JMP END_CHECK
+	_NINE:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMB9
+		OUT DX, AL
+		JMP END_CHECK
+	_DASH:
+		MOV CL, AL
+		MOV DX, PORTA
+		MOV AL, NUMBN
+		OUT DX, AL
+		JMP END_CHECK
+		
+	END_CHECK:
+	POP DX ; retrieve program context
+	POP AX
+	POPF ; pop 16-bit operands
+	IRET ; return from interrupt
+	ISR1 ENDP ; end of procedure
+PROCED1 ENDS
+
+PROCED2 SEGMENT
+ISR2 PROC FAR
+ASSUME CS:PROCED2, DS:DATA
+ORG 02000H 
+	PUSHF ; push 16-bit operands
+	PUSH AX ; save program context
+	PUSH DX
+	
+	CMP CL,00H
+	JE _ONE
+	CMP CL,01H
+	JE _TWO
+	CMP CL,02H
+	JE _THREE
+	CMP CL,04H
+	JE _FOUR
+	CMP CL,05H
+	JE _FIVE
+	CMP CL,06H
+	JE _SIX
+	CMP CL,08H
+	JE _SEVEN
+	CMP CL,09H
+	JE _EIGHT
+	CMP CL,0AH
+	JE _NINE
+	CMP CL,0CH
+	JE _DASH
+	CMP CL,0DH
+	JE _ZERO
+	CMP CL,0EH
+	JE _DASH
+
+	_ZERO:
+		MOV DX, PORTB
+		MOV AL, NUMB0
+		OUT DX, AL
+		JMP END_CHECK
+	_ONE:
+		MOV DX, PORTB
+		MOV AL, NUMB1
+		OUT DX, AL
+		JMP END_CHECK
+	_TWO:
+		MOV DX, PORTB
+		MOV AL, NUMB2
+		OUT DX, AL
+		JMP END_CHECK
+	_THREE:
+		MOV DX, PORTB
+		MOV AL, NUMB3
+		OUT DX, AL
+		JMP END_CHECK
+	_FOUR:
+		MOV DX, PORTB
+		MOV AL, NUMB4
+		OUT DX, AL
+		JMP END_CHECK
+	_FIVE:
+		MOV DX, PORTB
+		MOV AL, NUMB5
+		OUT DX, AL
+		JMP END_CHECK
+	_SIX:
+		MOV DX, PORTB
+		MOV AL, NUMB6
+		OUT DX, AL
+		JMP END_CHECK
+	_SEVEN:
+		MOV DX, PORTB
+		MOV AL, NUMB7
+		OUT DX, AL
+		JMP END_CHECK
+	_EIGHT:
+		MOV DX, PORTB
+		MOV AL, NUMB8
+		OUT DX, AL
+		JMP END_CHECK
+	_NINE:
+		MOV DX, PORTB
+		MOV AL, NUMB9
+		OUT DX, AL
+		JMP END_CHECK
+	_DASH:
+		MOV DX, PORTB
+		MOV AL, NUMBN
+		OUT DX, AL
+		JMP END_CHECK
+	
+	END_CHECK:
+	POP DX ; retrieve program context
+	POP AX
+	POPF ; pop 16-bit operands
+	IRET ; return from interrupt
+	ISR2 ENDP ; end of procedure
+PROCED2 ENDS
+
+DATA SEGMENT
+	ORG 03000H
+	PORTA EQU 0F0H ; PORTA address
+	PORTB EQU 0F2H ; PORTB address
+	PORTC EQU 0F4H ; PORTC address
+	COM_REG EQU 0F6H ; Command Register Address
+	PIC1 EQU 0F8H ; A1 = 0
+	PIC2 EQU 0FAH ; A1 = 1
+	ICW1 EQU 13H
+	ICW2 EQU 80H
+	ICW4 EQU 03H
+	OCW1 EQU 0FCH
+    NUMB0 EQU 00111111B ;0
+	NUMB1 EQU 00000110B ;1
+	NUMB2 EQU 01011011B ;2
+    NUMB3 EQU 01001111B ;3
+    NUMB4 EQU 01100110B ;4
+    NUMB5 EQU 01101101B ;5
+    NUMB6 EQU 01111101B ;6
+    NUMB7 EQU 00000111B ;7
+	NUMB8 EQU 01111111B ;8
+	NUMB9 EQU 01101111B ;9
+	NUMBN EQU 01000000B ;-
+DATA ENDS
+
+STK SEGMENT STACK
+	BOS DW 64d DUP(?) ; stack depth (bottom of stack)
+	TOS LABEL WORD ; top of stack
+STK ENDS
+
+CODE SEGMENT PUBLIC 'CODE'
+ASSUME CS:CODE, DS:DATA, SS:STK
+ORG 03000H
+
+	START:
+		MOV AX, DATA
+		MOV DS, AX ; set the Data Segment address
+		MOV AX, STK
+		MOV SS, AX ; set the Stack Segment address
+		LEA SP, TOS ; set address of SP as top of stack
+		CLI ; clears IF flag
+
+		;program the 8255
+		MOV DX, COM_REG
+		MOV AL, 81H
+		OUT DX, AL
+
+		;program the 8259
+		MOV DX, PIC1 ; set I/O address to access ICW1
+		MOV AL, ICW1
+		OUT DX, AL ; send command word
+		MOV DX, PIC2 ; set I/O address to access ICW2,ICW4 and OCW1
+		MOV AL, ICW2
+		OUT DX, AL ; send command word
+		MOV AL, ICW4
+		OUT DX, AL ; send command word
+		MOV AL, OCW1
+		OUT DX, AL ; send command word
+		STI ; enable INTR pin of 8086
+
+		;storing interrupt vector to interrupt vector table in memory
+		MOV AX, OFFSET ISR1 ; get offset address of ISR1 (IP)
+		MOV [ES:200H], AX ; store offset address to memory at 200H
+		MOV AX, SEG ISR1 ; get segment address of ISR1 (CS)
+		MOV [ES:202H], AX ; store segment address to memory at 202H
+		MOV AX, OFFSET ISR2 ; get offset address of ISR2 (IP)
+		MOV [ES:204H], AX ; store offset address to memory at 204H
+		MOV AX, SEG ISR2 ; get segment address of ISR2 (CS)
+		MOV [ES:206H], AX ; store segment address to memory at 206H
+
+		;foreground routine
+	       MOV DX, PORTA ; set port address of PORTA
+	       MOV AL, NUMB0
+	       OUT DX, AL ;  
+		 
+	       MOV DX, PORTB ; set port address of PORTB
+	       MOV AL, NUMB0
+	       OUT DX, AL 
+	
+	HERE:
+		CALL DELAY_5MS
+		CALL DELAY_5MS
+		MOV DX, PORTC
+		MOV AL, 80H
+		OUT DX, AL
+		CALL DELAY_5MS
+		CALL DELAY_5MS
+		MOV AL, 00H
+		OUT DX, AL
+		JMP HERE
+
+	DELAY_5MS:
+		MOV BX, 0DF2H
+	L1:
+		DEC BX
+		NOP
+		JNZ L1
+		RET	
+	
+CODE ENDS
+END START
